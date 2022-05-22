@@ -226,49 +226,87 @@ _PrintCal	proc uses eax ecx,_hWnd,_hDc,_w,_Month,_DayCount,_FlagLeapYear
 			ret
 _PrintCal	endp
 
-;_Resize         proc
-;                local   @stRect: RECT, @stRect1: RECT
-;        
-;        invoke  MoveWindow, hWinStatus, 0, 0, 0, 0,TRUE
-;        invoke  GetWindowRect, hWinStatus, addr @stRect
-;        invoke  GetClientRect, hWinMain, addr @stRect1
-;        mov     ecx, @stRect1.right
-;        sub     ecx, @stRect1.left
-;        mov     eax, @stRect1.bottom
-;        sub     eax, @stRect1.top
-;        sub     eax, @stRect.bottom
-;        add     eax, @stRect.top
-;        invoke  MoveWindow, hWinEdit, 0, 0, ecx, eax, TRUE
-;        ret
-;_Resize         endp
+_JudgeW		proc uses eax ecx,_Year,_Month
+				local	@YearFirst2		;年份的前两位
+				local	@YearLast2		;年份的后两位
+				local	@w				;蔡勒公式转换结果
+									.if _Month==1 || _Month==2
+											add _Month,12
+									.endif
+									mov edx,0
+									mov eax,_Year
+									mov ecx,100
+									idiv ecx
+									mov @YearFirst2,eax
+									mov @YearLast2,edx
+									mov @w,edx
+									add @w,140;防止出现负数
+									;y/4
+									mov edx,0
+									mov eax,@YearLast2
+									mov ecx,4
+									idiv ecx
+									;mov @w2,eax
+									add @w,eax
+									;
+									mov edx,0
+									mov eax,@YearFirst2
+									mov ecx,4
+									idiv ecx
+									;mov @w3,eax
+									add @w,eax
+									;
+									mov edx,0
+									mov eax,_Month
+									inc eax
+									mov ecx,13
+									imul ecx
+									mov edx,0
+									mov ecx,5
+									idiv ecx
+									;mov @w5,eax
+									add @w,eax
+									;
+									mov edx,0
+									mov eax,@YearFirst2
+									mov ecx,2
+									imul ecx
+									;mov @w4,eax
+									sub @w,eax
+									;
+									mov edx,0
+									mov	eax,@w
+									mov ecx,7
+									idiv ecx
+									mov @w,edx
+				ret
+_JudgeW	endp
 
 ; 窗口过程
 ; 交给Windows的回调函数需要保证ebx edi esi在调用前后保持不变
 _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个参数
 				local   @stPs: PAINTSTRUCT	; 窗口客户区的“设备环境”句柄
-				local   @stRect: RECT
 
-				local	@stText11Rect: RECT
-				local	@rect1:RECT
+				local	@rect1:RECT			;输出用的矩形限定框
 
-				local	@hbr:HBRUSH
-				local	@hfont:HFONT
+				local	@hbr:HBRUSH			;画刷
+				local	@hfont:HFONT		;字体
 
-				local	@FlagLeapYear
-				local	@DayCount
-				local	@FlagDayCorrect
+				local	@FlagLeapYear		;是否是闰年
+				local	@DayCount			;本月天数
+				local	@FlagDayCorrect		;输入的日期是否正确
 
-				local	@i
-				local	@j
+				local	@i			;循环用
+				local	@j			;循环用
 				local	@x1
 				local	@y1
 				local	@x2
 				local	@y2
 
-				local   @hDc
+				local   @hDc		;句柄
 
-				local   @stDY: SYSTEMTIME
-				local   @stST: SYSTEMTIME
+				local   @stDY: SYSTEMTIME		;时间，状态栏用
+				local   @stST: SYSTEMTIME		;时间，状态栏用
 
 				local   @stPos: POINT
 				local   @hSysMenu		; 菜单
@@ -281,10 +319,10 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				local	@Month
 				local	@Day
 
-				local	@YearFirst2
-				local	@YearLast2
-				local	@w
-				local	@wMonth
+				local	@YearFirst2		;年份的前两位
+				local	@YearLast2		;年份的后两位
+				local	@w				;蔡勒公式转换结果
+				local	@wMonth			;蔡勒公式用的月份（3-13）
 
 		; uMsg指出消息类型
 		mov     eax, uMsg
@@ -299,8 +337,6 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 		.elseif eax == WM_PAINT
 				invoke  BeginPaint, hWnd, addr @stPs		; 获取窗口客户区的“设备环境”句柄
 				mov     @hDc, eax
-				invoke  GetClientRect, hWnd, addr @stRect	; 获取客户区的大小
-				;invoke  DrawText, @hDc, addr szText, -1, addr @stRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER
 
 ;				;字体设置
 ;				invoke CreateFont,24,16,0,0,400,0,0,0,OEM_CHARSET,\
@@ -330,6 +366,9 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 ;				invoke	FrameRect, @hDc, addr @stText11Rect, @hbr 
 ;				;invoke	InvertRect, @hDc, addr @stText11Rect
 
+;********************************************************************************
+;		开始画日历的底图
+;********************************************************************************
 				mov	@x1,XY_CalStartX
 				mov	@y1,XY_CalStartY + 5
 				mov	@x2,XY_CalStartX + XY_CalWidth
@@ -415,9 +454,10 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				mov     hSubMenu, eax
 				invoke  GetSystemMenu, hWnd, FALSE
 				mov     @hSysMenu, eax
+				;菜单
 				invoke  AppendMenu, @hSysMenu, 0, IDM_HELP, offset szMenuHelp
 				invoke  AppendMenu, @hSysMenu, 0, IDM_ABOUT, offset szMenuAbout
-
+				;状态栏
 				mov     eax, hWnd
                 mov     hWinMain, eax
 				invoke  CreateStatusWindow, WS_CHILD or WS_VISIBLE, NULL, hWinMain, ID_STATUSBAR
@@ -431,6 +471,9 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				invoke  SendMessage, hWinStatus, SB_SETTEXT, 0, addr @szBuffer		;显示日期
 				invoke  SendMessage, hWinStatus, SB_SETTEXT, 3, addr szFormat2		;显示版权信息
 
+;********************************************************************************
+;		绘制输入框
+;********************************************************************************
 				;输入框 年
 				invoke  CreateWindowEx, NULL, \
 						offset szEdit, NULL, \
@@ -464,15 +507,9 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 						290, 10, 40, 22, \
 						hWnd, 201, hInstance, NULL
 
- ;               invoke  _Resize
                 invoke  SetTimer, hWnd, 1, 300, NULL
         
-;		.elseif eax == WM_SIZE
-;                call    _Resize
-
 		.elseif eax == WM_COMMAND
-				;invoke  wsprintf, addr @szBuffer, addr szFormat, wParam
-				;invoke  MessageBox, hWinMain, addr @szBuffer, offset szCaption, MB_OK
 				mov     eax, wParam
 				movzx   eax, ax
 				.if     eax == IDM_EXIT
@@ -480,8 +517,9 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 						invoke  PostQuitMessage, NULL
 				;日期跳转按钮被按下
 				.elseif	eax == 201
-						;invoke  MessageBox, hWinMain, addr szButton, offset szCaption, MB_OK
-
+;********************************************************************************
+;		获取输入的日期，判断合法性
+;********************************************************************************
 						invoke	GetDlgItemText, hWnd, 101,addr @szBufferYear,5
 						invoke	GetDlgItemText, hWnd, 102,addr @szBufferMonth,3
 						invoke	GetDlgItemText, hWnd, 103,addr @szBufferDay,3
@@ -495,14 +533,14 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 						;判断日期输入是否正确
 						mov @FlagLeapYear,0
 						mov @FlagDayCorrect,0
-						;
+						;判断输入是否为空
 						.if	@Year==0 || @Month==0 ||@Day==0
 							invoke  MessageBox, hWinMain, addr szErrorBoxEmpty, offset szCaptionError, MB_OK
 						.elseif @Month>12 || @Month<1
-							;
+							;月份不符合要求
 							invoke  MessageBox, hWinMain, addr szErrorBoxMonth, offset szCaptionError, MB_OK
 						.else
-							;
+							;判断闰年
 							mov edx,0
 							mov eax,@Year
 							mov ecx,4
@@ -524,7 +562,7 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 											.endif
 									.endif
 							.endif
-							;
+							;判断大小月
 							.if @Month==1 ||@Month==3 ||@Month==5 ||@Month==7 ||@Month==8 ||@Month==10 ||@Month==12
 									.if @Day<0||@Day>31
 											invoke  MessageBox, hWinMain, addr szErrorBoxDay, offset szCaptionError, MB_OK
@@ -540,7 +578,7 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 											mov @FlagDayCorrect,1
 									.endif
 							.else
-							;
+							;该死的二月
 									.if @FlagLeapYear==0
 											.if @Day<0||@Day>28
 													invoke  MessageBox, hWinMain, addr szErrorBoxDay, offset szCaptionError, MB_OK
@@ -557,62 +595,15 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 											.endif
 									.endif
 							.endif
-
+;********************************************************************************
+;		蔡勒公式转换
+;********************************************************************************
 							.if @FlagDayCorrect==1
-									mov eax,@Month
-									mov @wMonth,eax
-									.if @wMonth==1 || @wMonth==2
-											add @wMonth,12
-									.endif
-									mov edx,0
-									mov eax,@Year
-									mov ecx,100
-									idiv ecx
-									mov @YearFirst2,eax
-									mov @YearLast2,edx
+
+								invoke _JudgeW,@Year,@Month
 									mov @w,edx
-									add @w,140;防止出现负数
-									;y/4
-									mov edx,0
-									mov eax,@YearLast2
-									mov ecx,4
-									idiv ecx
-									;mov @w2,eax
-									add @w,eax
-									;
-									mov edx,0
-									mov eax,@YearFirst2
-									mov ecx,4
-									idiv ecx
-									;mov @w3,eax
-									add @w,eax
-									;
-									mov edx,0
-									mov eax,@wMonth
-									inc eax
-									mov ecx,13
-									imul ecx
-									mov edx,0
-									mov ecx,5
-									idiv ecx
-									;mov @w5,eax
-									add @w,eax
-									;
-									mov edx,0
-									mov eax,@YearFirst2
-									mov ecx,2
-									imul ecx
-									;mov @w4,eax
-									sub @w,eax
-									;
-									mov edx,0
-									mov	eax,@w
-									mov ecx,7
-									idiv ecx
-									mov @w,edx
-									;
 							
-									invoke  wsprintf, addr @szBuffer, addr szFormat, @w
+									invoke  wsprintf, addr @szBuffer, addr szFormat, edx
 									invoke  MessageBox, hWinMain, addr @szBuffer, offset szCaption, MB_OK
 									invoke	_PrintCal,hWnd,@hDc,@w,@Month,@DayCount,@FlagLeapYear
 									;invoke	InvertRect, @hDc, addr @stRect
