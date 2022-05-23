@@ -838,6 +838,7 @@ _WinMain    endp
 
 start:
         invoke  InitCommonControls
+		invoke	FreeConsole
 		call    _WinMain
 		invoke  ExitProcess, NULL
 		end     start
