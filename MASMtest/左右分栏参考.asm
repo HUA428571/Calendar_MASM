@@ -129,56 +129,50 @@ hWinEdit        dd  ?	; 编辑区
 .const
 ; 字符串注意不要遗漏最后的0
 szClass                 db      'EDIT', 0
-szClassName				db  'MyClass', 0
-szCaptionMain			db  'Calendar', 0	;标题
+szClassName     db  'MyClass', 0
+szCaptionMain   db  'Calendar', 0	;标题
 
-szText					db  'Win32 Assembly, Simple and powerful', 0
+szText          db  'Win32 Assembly, Simple and powerful', 0
 
-szText21				db  '一', 0
-szText22				db  '二', 0
-szText23				db  '三', 0
-szText24				db  '四', 0
-szText25				db  '五', 0
-szText26				db  '六', 0
-szText27				db  '日', 0
+szText21		db  '一', 0
+szText22		db  '二', 0
+szText23		db  '三', 0
+szText24		db  '四', 0
+szText25		db  '五', 0
+szText26		db  '六', 0
+szText27		db  '日', 0
 
-szText31				db  '年', 0
-szText32				db  '月', 0
-szText33				db  '日', 0
+szText11		db  '一', 0
 
-szMenuHelp				db  '帮助主题(&H)', 0
-szMenuAbout				db  '关于本程序(&A)...', 0
-szCaption				db  '菜单选择Window', 0
+szMenuHelp      db  '帮助主题(&H)', 0
+szMenuAbout     db  '关于本程序(&A)...', 0
+szCaption       db  '菜单选择Window', 0
 
-szCaptionError			db  '日期输入错误！', 0
-szErrorBoxEmpty			db	'输入不能为空！',0
-szErrorBoxYear			db	'输入年不在支持的范围内',0
-szErrorBoxMonth			db	'输入月错误！',0
-szErrorBoxDay			db	'输入日错误！',0
+szCaptionError	db  '日期输入错误！', 0
+szErrorBoxEmpty	db	'输入不能为空！',0
+szErrorBoxYear	db	'输入年不在支持的范围内',0
+szErrorBoxMonth	db	'输入月错误！',0
+szErrorBoxDay	db	'输入日错误！',0
 
-szFormat				db  '星期%02d', 0
+szFormat        db  '星期%02d', 0
 
-szFormat0				db  '%04d年%d月%d日 ', 0
-szFormatStatusBar1		db  '星期%s', 0
-szFormat1				db  '%02d:%02d:%02d', 0
-szFormat2				db  'CopyRight 2022 HuaCL', 0
-szFormatDay				db	'%d' , 0
-dwStatusWidth			dd  100, 150, 210, -1 ;状态栏分栏
+szFormat0       db  '%04d年%d月%d日 ', 0
+szFormat1       db  '%02d:%02d:%02d', 0
+szFormat2       db  'CopyRight 2022 HuaCL', 0
+dwStatusWidth   dd  100, 160, 220, -1 ;状态栏分栏
 
-szEdit					db  'Edit', 0
-szButton				db  'Button', 0
-szButtonText			db  '&跳转', 0
+szEdit			db  'Edit', 0
+szButton        db  'Button', 0
+szButtonText    db  '&OK', 0
 
-FontName				db	"黑体",0
+FontName		db	"黑体",0
 
 .code
 ;atoi PROTO C strptr：DWORD
 atoi	proto C strptr:dword
 
-;********************************************************************************
-;		日历的底图
-;********************************************************************************
-_PrintBG	proc uses eax,_hWnd
+_PrintCal	proc uses eax ecx,_hWnd,_hDc,_w,_Month,_DayCount,_FlagLeapYear
+			local   @stPs: PAINTSTRUCT	; 窗口客户区的“设备环境”句柄
 
 			local	@szBuffer[256]: byte
 
@@ -188,187 +182,46 @@ _PrintBG	proc uses eax,_hWnd
 
 			local	@hDc
 
-			local	@i
-			local	@j
-			local	@x1
-			local	@y1
-			local	@x2
-			local	@y2
+				local	@i
+				local	@j
+				local	@x1
+				local	@y1
+				local	@x2
+				local	@y2
+				
+			invoke  GetDC, _hWnd		;开始画图！
+			mov     @hDc, eax
+
+				;高度，宽度，偏移x，偏移y，自重，斜体，下划线，删除线，字符集
+				invoke CreateFont,24,12,0,0,400,0,0,0,DEFAULT_CHARSET,\
+							;输出精度，裁剪精度
+                            OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
+							;输出质量，字体族，字体名
+                            DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
+                            ADDR FontName
+				invoke	SelectObject,@hDc,eax
+				mov		@hfont,eax
+
+				mov	@x1,XY_CalStartX
+				mov	@y1,XY_CalStartY + 5
+				mov	@x2,XY_CalStartX + XY_CalWidth
+				mov	@y2,XY_CalStartY + XY_CalHeight
+
+
+
+
+
+
+
+
+
+				invoke	SetTextColor,@hDc,00000000H
+				invoke	SetRect, addr @rect1,100,100,400,400
+				invoke  DrawText, @hDc,addr szText21,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周一
+
+
+				;invoke	InvertRect, @hDc, addr @rect1
 			
-		invoke  GetDC, _hWnd		;开始画图！
-		mov     @hDc, eax
-
-		mov	@x1,XY_CalStartX
-		mov	@y1,XY_CalStartY
-		mov	@x2,XY_CalStartX + XY_CalWidth
-		mov	@y2,XY_CalStartY + XY_CalHeight
-
-		;高度，宽度，偏移x，偏移y，自重，斜体，下划线，删除线，字符集
-		invoke CreateFont,24,12,0,0,400,0,0,0,DEFAULT_CHARSET,\
-					;输出精度，裁剪精度
-                    OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
-					;输出质量，字体族，字体名
-                    DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
-                    ADDR FontName
-		invoke	SelectObject,@hDc,eax
-		mov		@hfont,eax
-		invoke	SetBkMode,@hDc,TRANSPARENT
-
-		invoke	SetTextColor,@hDc,000000FFH
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText27,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周日
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetTextColor,@hDc,00000000H
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText21,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周一
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText22,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周二
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText23,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周三
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText24,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周四
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText25,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周五
-		add	@x1,XY_CalWidth
-		add	@x2,XY_CalWidth
-		invoke	SetTextColor,@hDc,000000FFH
-		invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-		invoke  DrawText, @hDc,addr szText26,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;周六
-
-		invoke	GetStockObject ,BLACK_BRUSH
-		mov @hbr ,eax;获取黑色笔刷并保存起来
-		mov	@x1,XY_CalStartX
-		mov	@y1,XY_CalStartY
-		mov	@x2,XY_CalStartX
-		mov	@y2,XY_CalStartY
-		add	@y1,XY_CalHeight
-		add	@y2,XY_CalHeight
-		add	@x2,XY_CalWidth
-		add	@y2,XY_CalHeight
-		mov	@i,0
-		mov	@j,0
-		.while @i<6
-			.while @j<7
-				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
-				invoke	FrameRect, @hDc, addr @rect1, @hbr 
-				add	@x1,XY_CalWidth
-				add	@x2,XY_CalWidth
-				inc	@j
-			.endw
-			mov	@x1,XY_CalStartX
-			mov	@x2,XY_CalStartX
-			add	@x2,XY_CalWidth
-			add	@y1,XY_CalHeight
-			add	@y2,XY_CalHeight
-			inc @i
-			mov @j,0
-		.endw
-		invoke  ReleaseDC, _hWnd,@hDc
-		ret
-_PrintBG	endp
-
-_PrintCal	proc uses eax ebx ecx edx,_hWnd,_w,_DayCount,_Day
-
-			local	@szBuffer[256]: byte
-
-			local	@hbr:HBRUSH
-			local	@hfont:HFONT
-			local	@rect1:RECT
-
-			local	@hDc
-
-			local	@x1
-			local	@y1
-			local	@x2
-			local	@y2
-
-			local	@PrintDay	;正咋打印的日期
-			local	@w			;当前输出日期的星期
-				
-		invoke  GetDC, _hWnd		;开始画图！
-		mov     @hDc, eax
-
-		invoke	CreateSolidBrush,001E90FFH
-		mov @hbr ,eax	;获取灰色笔刷并保存起来
-
-		;高度，宽度，偏移x，偏移y，自重，斜体，下划线，删除线，字符集
-		invoke CreateFont,24,12,0,0,400,0,0,0,DEFAULT_CHARSET,\
-				;输出精度，裁剪精度
-				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
-				;输出质量，字体族，字体名
-				DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
-				addr FontName
-
-		invoke	SelectObject,@hDc,eax
-		mov @hfont,eax
-
-		invoke	SetBkMode,@hDc,TRANSPARENT
-				
-		mov @PrintDay,1		;从每个月的第一天开始
-		mov eax,_w			;这一天是周几
-		mov @w,eax
-		
-		mov @x1,XY_CalStartX
-		mov @y1,XY_CalStartY
-		mov @x2,XY_CalStartX
-		mov @y2,XY_CalStartY
-		
-		add @y1,XY_CalHeight	;第一行是标题栏
-		add @y2,XY_CalHeight	;第一行是标题栏
-
-				add @x2,XY_CalWidth
-				add @y2,XY_CalHeight
-
-				mov edx,0
-				mov eax,@w
-				mov ecx,XY_CalWidth
-				imul ecx
-				add @x1,eax
-				add @x2,eax
-
-				mov ebx,_DayCount
-				.while @PrintDay <= ebx
-					.if @w == 0 || @w == 6
-						invoke	SetTextColor,@hDc,000000FFH
-					.else
-						invoke	SetTextColor,@hDc,00000000H
-					.endif
-
-					;输入的日期
-					mov eax,_Day
-					.if @PrintDay == eax
-						invoke	SetRect, addr @rect1 ,@x1,@y1,@x2,@y2
-						invoke	FillRect, @hDc,addr @rect1 ,@hbr
-					.endif
-
-					invoke	SetRect, addr @rect1 ,@x1,@y1,@x2,@y2
-					invoke	wsprintf, addr @szBuffer, addr szFormatDay, @PrintDay
-					invoke  DrawText, @hDc,addr @szBuffer,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER
-
-					inc		@PrintDay
-
-					.if	@w == 6
-						mov @w,0
-						mov @x1,XY_CalStartX
-						mov @x2,XY_CalStartX
-						add @x2,XY_CalWidth
-						add @y1,XY_CalHeight
-						add @y2,XY_CalHeight
-					.else
-						inc @w
-						add @x1,XY_CalWidth
-						add @x2,XY_CalWidth
-					.endif
-				.endw	
 			invoke  ReleaseDC, _hWnd,@hDc
 			ret
 _PrintCal	endp
@@ -379,26 +232,7 @@ _JudgeW		proc uses eax ecx,_Year,_Month,_Day
 				local	@w				;蔡勒公式转换结果
 									.if _Month==1 || _Month==2
 											add _Month,12
-											dec _Year
 									.endif
-
-									;众所周知，2000年是20世纪，2001年才是21世纪
-									mov edx,0
-									mov eax,_Year
-									mov ecx,1000
-									idiv ecx
-									.if edx == 0
-										inc _Year
-									.endif
-									mov edx,0
-									mov eax,_Year
-									mov ecx,100
-									idiv ecx
-									mov @YearFirst2,eax
-									mov @YearLast2,edx
-									mov @w,edx
-									add @w,139		;防止出现负数（公式里需要减1，在这里直接减掉）
-
 									mov edx,0
 									mov eax,_Year
 									mov ecx,100
@@ -408,8 +242,7 @@ _JudgeW		proc uses eax ecx,_Year,_Month,_Day
 									mov @w,edx
 									add @w,139		;防止出现负数（公式里需要减1，在这里直接减掉）
 									;+day-1
-									mov eax,_Day
-									add	@w,eax
+									add	@w,_Day
 									;y/4
 									mov edx,0
 									mov eax,@YearLast2
@@ -453,7 +286,6 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				local   @stPs: PAINTSTRUCT	; 窗口客户区的“设备环境”句柄
 
 				local	@rect1:RECT			;输出用的矩形限定框
-				local	@rectBG:RECT
 
 				local	@hbr:HBRUSH			;画刷
 				local	@hfont:HFONT		;字体
@@ -470,7 +302,6 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				local	@y2
 
 				local   @hDc		;句柄
-				local   @hDc1		;句柄
 
 				local   @stDY: SYSTEMTIME		;时间，状态栏用
 				local   @stST: SYSTEMTIME		;时间，状态栏用
@@ -505,25 +336,108 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 				invoke  BeginPaint, hWnd, addr @stPs		; 获取窗口客户区的“设备环境”句柄
 				mov     @hDc, eax
 
+;				;字体设置
+;				invoke CreateFont,24,16,0,0,400,0,0,0,OEM_CHARSET,\
+;                            OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
+;                            DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
+;                            ADDR FontName 
+
+;				invoke SelectObject,@hDc,eax
+;				mov    @hfont,eax
+;				invoke SetTextColor,@hDc,000000FFH
+;				invoke SetBkColor,@hDc,00FF00FFH
+
+;				;输出文字
+;				;https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setrect
+;				invoke	SetRect, addr @stText11Rect,100,100,200,150
+;				;https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-drawtext
+;				invoke  DrawText, @hDc, addr szText11,\
+;								-1, \				;输出文本的字符个数
+;								addr @stText11Rect, \		;显示区域
+;								DT_SINGLELINE or DT_LEFT;格式输出
+;
+;				;绘制矩形框
+;				;https://blog.csdn.net/qq_45021180/article/details/99700901
+;				;invoke	CreateSolidBrush, @hbr, 0x000000FF
+;				invoke	GetStockObject ,BLACK_BRUSH
+;				mov @hbr ,eax;获取黑色笔刷并保存起来
+;				invoke	FrameRect, @hDc, addr @stText11Rect, @hbr 
+;				;invoke	InvertRect, @hDc, addr @stText11Rect
+
+;********************************************************************************
+;		开始画日历的底图
+;********************************************************************************
+				mov	@x1,XY_CalStartX
+				mov	@y1,XY_CalStartY + 5
+				mov	@x2,XY_CalStartX + XY_CalWidth
+				mov	@y2,XY_CalStartY + XY_CalHeight
+
 				;高度，宽度，偏移x，偏移y，自重，斜体，下划线，删除线，字符集
-				invoke CreateFont,20,10,0,0,400,0,0,0,DEFAULT_CHARSET,\
+				invoke CreateFont,24,12,0,0,400,0,0,0,DEFAULT_CHARSET,\
 							;输出精度，裁剪精度
                             OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
 							;输出质量，字体族，字体名
                             DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
                             ADDR FontName
-
 				invoke	SelectObject,@hDc,eax
 				mov		@hfont,eax
-				invoke	SetBkMode,@hDc,TRANSPARENT
 				invoke	SetTextColor,@hDc,00000000H
-				invoke	SetRect, addr @rect1,220,50,260,80
-				invoke  DrawText, @hDc,addr szText31,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;年
-				invoke	SetRect, addr @rect1,300,50,340,80
-				invoke  DrawText, @hDc,addr szText32,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;月
-				invoke	SetRect, addr @rect1,380,50,420,80
-				invoke  DrawText, @hDc,addr szText33,-1,addr @rect1,DT_SINGLELINE or DT_CENTER or DT_VCENTER		;日
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText21,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周一
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText22,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周二
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText23,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周三
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText24,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周四
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText25,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周五
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetTextColor,@hDc,000000FFH
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText26,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周六
+				add	@x1,XY_CalWidth
+				add	@x2,XY_CalWidth
+				invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+				invoke  DrawText, @hDc,addr szText27,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周日
 
+				invoke	GetStockObject ,BLACK_BRUSH
+				mov @hbr ,eax;获取黑色笔刷并保存起来
+				mov	@x1,XY_CalStartX
+				mov	@y1,XY_CalStartY
+				mov	@x2,XY_CalStartX
+				mov	@y2,XY_CalStartY
+				add	@y1,XY_CalHeight
+				add	@y2,XY_CalHeight
+				add	@x2,XY_CalWidth
+				add	@y2,XY_CalHeight
+				mov	@i,0
+				mov	@j,0
+				.while @i<6
+						.while @j<7
+								invoke	SetRect, addr @rect1,@x1,@y1,@x2,@y2
+								invoke	FrameRect, @hDc, addr @rect1, @hbr 
+								add	@x1,XY_CalWidth
+								add	@x2,XY_CalWidth
+								inc	@j
+						.endw
+						mov	@x1,XY_CalStartX
+						mov	@x2,XY_CalStartX
+						add	@x2,XY_CalWidth
+						add	@y1,XY_CalHeight
+						add	@y2,XY_CalHeight
+						inc @i
+						mov @j,0
+				.endw
 
 				invoke  EndPaint, hWnd, addr @stPs	
 		.elseif eax == WM_CREATE
@@ -546,84 +460,46 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
                 movzx   ecx, @stDY.wDay 
 				invoke  wsprintf, addr @szBuffer, addr szFormat0, eax, ebx, ecx
 				invoke  SendMessage, hWinStatus, SB_SETTEXT, 0, addr @szBuffer		;显示日期
-                movzx   ecx, @stDY.wDayOfWeek
-				mov		@w,ecx
-				.if ecx == 0
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText27
-				.elseif ecx == 1
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText21
-				.elseif ecx == 2
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText22
-				.elseif ecx == 3
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText23
-				.elseif ecx == 4
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText24
-				.elseif ecx == 5
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText25
-				.elseif ecx == 6
-					invoke  wsprintf, addr @szBuffer, addr szFormatStatusBar1, addr szText26
-				.endif
-
-				invoke  SendMessage, hWinStatus, SB_SETTEXT, 1, addr @szBuffer		;显示星期
 				invoke  SendMessage, hWinStatus, SB_SETTEXT, 3, addr szFormat2		;显示版权信息
 
 ;********************************************************************************
 ;		绘制输入框
 ;********************************************************************************
-
-				;高度，宽度，偏移x，偏移y，自重，斜体，下划线，删除线，字符集
-				invoke CreateFont,20,10,0,0,400,0,0,0,DEFAULT_CHARSET,\
-						;输出精度，裁剪精度
-						OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,\
-						;输出质量，字体族，字体名
-						DEFAULT_QUALITY,DEFAULT_PITCH or FF_SCRIPT,\
-						addr FontName
-				mov @hfont,eax
-
 				;输入框 年
 				invoke  CreateWindowEx, NULL, \
 						offset szEdit, NULL, \
-						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER or ES_CENTER, \
-						160, 53, 60, 24, \
+						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER, \
+						10, 10, 40, 22, \
 						hWnd, ID_EditYear, hInstance, NULL
 				;获取句柄
 				mov     hEditYear, eax
 				;限制输入长度
-				invoke	SendMessage,hEditYear, EM_LIMITTEXT, 4,0
-				;修改输入框字体以保持一致
-				invoke	SendMessage,hEditYear,WM_SETFONT,@hfont,1
-
+				invoke	SendMessage,hEditYear, EM_LIMITTEXT, 4,0;
 				;输入框 月
 				invoke  CreateWindowEx, NULL, \
 						offset szEdit, NULL, \
-						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER or ES_CENTER, \
-						260, 53, 40, 24, \
+						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER, \
+						100, 10, 20, 22, \
 						hWnd, ID_EditMonth, hInstance, NULL
 				mov     hEditMonth, eax
 				invoke	SendMessage,hEditMonth, EM_LIMITTEXT, 2,0;
-				;修改输入框字体以保持一致
-				invoke	SendMessage,hEditMonth,WM_SETFONT,@hfont,1
-
 				;输入框 日
 				invoke  CreateWindowEx, NULL, \
 						offset szEdit, NULL, \
-						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER or ES_CENTER, \
-						340, 53, 40, 24, \
+						WS_BORDER or WS_CHILD or WS_VISIBLE or ES_NUMBER, \
+						190, 10, 20, 22, \
 						hWnd, ID_EditDay, hInstance, NULL
 				mov     hEditDay, eax
 				invoke	SendMessage,hEditDay, EM_LIMITTEXT, 2,0;
-				;修改输入框字体以保持一致
-				invoke	SendMessage,hEditDay,WM_SETFONT,@hfont,1
-
 				;按钮
 				invoke  CreateWindowEx, NULL, \
 						offset szButton, offset szButtonText, \
 						WS_CHILD or WS_VISIBLE, \
-						460, 50, 60, 30, \
-						hWnd, ID_BtnGo, hInstance, NULL
-				invoke	SendMessage,ID_BtnGo,WM_SETFONT,@hfont,1
+						290, 10, 40, 22, \
+						hWnd, 201, hInstance, NULL
 
                 invoke  SetTimer, hWnd, 1, 300, NULL
+        
 		.elseif eax == WM_COMMAND
 				mov     eax, wParam
 				movzx   eax, ax
@@ -715,18 +591,16 @@ _ProcWinMain    proc    uses ebx edi esi, hWnd, uMsg, wParam, lParam	;消息的四个
 								;蔡勒公式转换(查本月一号的星期，准备输出）
 								invoke _JudgeW,@Year,@Month,1
 								mov @w,edx
+							
+									invoke  wsprintf, addr @szBuffer, addr szFormat, edx
+									invoke  MessageBox, hWinMain, addr @szBuffer, offset szCaption, MB_OK
+									invoke	_PrintCal,hWnd,@hDc,@w,@Month,@DayCount,@FlagLeapYear
+									;invoke	InvertRect, @hDc, addr @stRect
 
-								invoke  GetDC, hWnd		;开始画图！
-								mov     @hDc, eax
-									invoke	GetStockObject,WHITE_BRUSH
-									mov @hbr ,eax	;获取白色笔刷并保存起来
-									invoke	SetRect, addr @rectBG ,100,100,570,450
-									invoke	FillRect, @hDc,addr @rectBG ,@hbr
-								invoke  ReleaseDC, hWnd,@hDc
+									;invoke	SetRect, addr @rect1,100,100,200,200
+									;invoke  DrawText, @hDc,addr szText21,-1,addr @rect1,DT_SINGLELINE or DT_CENTER		;周一
 
 
-								invoke	_PrintCal,hWnd,@w,@DayCount,@Day
-								invoke	_PrintBG,hWnd
 							.endif
 						.endif
 				.elseif eax >= IDM_TOOLBAR && eax <= IDM_STATUSBAR

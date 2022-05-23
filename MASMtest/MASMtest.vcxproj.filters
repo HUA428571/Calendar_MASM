@@ -36,6 +36,9 @@
     <MASM Include="miandiag.asm">
       <Filter>源文件</Filter>
     </MASM>
+    <MASM Include="左右分栏参考.asm">
+      <Filter>源文件</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
