@@ -15,25 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="test.asm">
-      <Filter>源文件</Filter>
-    </MASM>
-    <MASM Include="first_window.asm">
-      <Filter>源文件</Filter>
-    </MASM>
-    <MASM Include="subclass.asm">
-      <Filter>源文件</Filter>
-    </MASM>
-    <MASM Include="statusbar.asm">
-      <Filter>源文件</Filter>
-    </MASM>
-    <MASM Include="giaglog.asm">
-      <Filter>源文件</Filter>
-    </MASM>
     <MASM Include="main.asm">
-      <Filter>源文件</Filter>
-    </MASM>
-    <MASM Include="miandiag.asm">
       <Filter>源文件</Filter>
     </MASM>
   </ItemGroup>
@@ -49,18 +31,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="icon.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="dialog.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="subclass.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="statusbar.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
     <ResourceCompile Include="main.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
@@ -72,10 +42,5 @@
     <Image Include="Main.ico">
       <Filter>资源文件</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="icon.asm">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

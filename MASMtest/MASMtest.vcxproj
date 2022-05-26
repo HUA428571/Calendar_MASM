@@ -143,28 +143,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <MASM Include="first_window.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="giaglog.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </MASM>
     <MASM Include="main.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="miandiag.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="statusbar.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="subclass.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="test.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-      <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </MASM>
   </ItemGroup>
   <ItemGroup>
@@ -173,28 +153,11 @@
     <ClInclude Include="resource2.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="dialog.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ResourceCompile>
-    <ResourceCompile Include="icon.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ResourceCompile>
     <ResourceCompile Include="main.rc" />
-    <ResourceCompile Include="statusbar.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ResourceCompile>
-    <ResourceCompile Include="subclass.rc">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />
     <Image Include="Main.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="icon.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
